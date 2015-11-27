@@ -1,0 +1,429 @@
+## Core overview
+
+  The network direct memory access core (netdma) is a monolithic direct memory
+  access unit designed for working in a network stack with interfaces that meet 
+  Altera Avalon interface specifications (Avalon-ST on the side of physical network 
+  and Avalon-MM interface on the side of system memory). 
+
+  The core has the next features:
+
+     * Reading and writing packets to system memory with length from 1 up to 65536 bytes.
+     * Memory access with parameterized transfer data unit size (from one byte up to
+       1024 bytes). Theoretical throughput is  (N*8 * F) where N is the data unit byte size and
+       F is the system clocking frequency. The real throughput will be determined by the system
+       interconnect backpressure
+     * All interfaces meets Altera Avalon-MM or Altera Avalon-ST specifications
+     * Module has enough control facilities for the common network driver model. In particular,
+       control-status registers to control irq's and etc, descriptor buffers to hold a set of
+       particular packet operation tasks. 
+     * When reading and streaming a packet from system memory, the core doesn't do internal 
+       packet bufferization, the data at the streaming output is not ready for being fetched
+       to a network PHY, because there are expected unpredictable pauses in the streaming packet 
+       process (no valid data cycles). Required after-module packet bufferization.
+     * Irq system for the packet transmitted and packet received events. By default, irq is a one
+       tact strobe.
+     * Flexible parameterization that enables the disabling many feature with saving about a half of area
+       utilization, including disabling all rx or tx logic. 
+     * For more features details, see the next sections.
+
+
+# Aliases 
+
+  dma       -- direct memory access operation or a unit that performs this operation
+
+  amm       -- Altera Avalon Memory Mapped interface 
+
+  tx packet -- packet to be transmitted from system memory
+
+  rx packet -- packet to be received in system memory
+
+# Block diagram
+
+ will be here... 
+
+# Interface listing 
+
+  The netdma module input/output set provides five interfaces and two unpacked
+  signals (clock and reset) for connection.
+
+## Ports overall
+  +-------------+-----------+------------------+-----------+----------------------------------------+
+  |    Port     |   Width   | Type / Direction | Required  |              Description               |
+  +-------------+-----------+------------------+-----------+----------------------------------------+
+  |    clk_i    |     1     |    input wire    |    yes    | the netdma clocking                    |
+  +-------------+-----------+------------------+-----------+----------------------------------------+ 
+  |    rst_i    |     1     |    input wire    |    no     | async reset, currently disabled (it's  |
+  |             |           |                  |           | usefulness is questionable)            |
+  +-------------+-----------+------------------+-----------+----------------------------------------+ 
+  |             |           |      netdma_     |           | interface that provides access to      |                      
+  |   cpu_if    |    83     |  cpu_interface   |    yes    | control-status registers, rx report    | 
+  |             |           |                  |           | reading, descriptors writing           |
+  +-------------+-----------+------------------+-----------+----------------------------------------+ 
+  |             |           | netdma_mm_read_  | yes, if   | interface that provides reading        |                      
+  | mm_read_if  | variable  |    interface     | TX_ENABLE | access to system memory (Avalon-MM     |
+  |             |           |                  | is on     | interface master)                      |
+  +-------------+-----------+------------------+-----------+----------------------------------------+ 
+  |             |           | netdma_mm_write_ | yes, if   | interface that provides write          |                      
+  | mm_write_if | variable  |    interface     | RX_ENABLE | access to system memory (Avalon-MM     | 
+  |             |           |                  | is on     | interface master)                      |
+  +-------------+-----------+------------------+-----------+----------------------------------------+ 
+  |             |           |   netdma_src_    | yes, if   | interface that enables data streaming  |                      
+  |   src_if    | variable  |    interface     | TX_ENABLE | towards physical network (Avalon-ST    | 
+  |             |           |                  | is on     | source)                                |
+  +-------------+-----------+------------------+-----------+----------------------------------------+ 
+  |             |           |   netdma_snk_    | yes, if   | interface that enables data stream     |                      
+  |   snk_if    | variable  |    interface     | RX_ENABLE | receiving from the side of physical    | 
+  |             |           |                  | is on     | network (Avalon-ST sink)               |
+  +-------------+-----------+------------------+-----------+----------------------------------------+ 
+
+##  Interfaces details:
+
+  All interfaces together with corresponding endpoing logic (in specified files)
+  meets Altera Avalon interface specifications -- Altera Avalon-MM (netdma_cpu_interface,
+  netdma_mm_read_interface, netdma_mm_write_interface) and Altera Avalon-ST 
+  (netdma_src_interface, netdma_snk_interface)
+
+  netdma_cpu_interface : 
+
+  Type : Avalon-MM slave
+
+  Contains a set of wires to respond fundamental read transaction requests
+  from a system interconnect, provides all dma controller <--> cpu communications --
+  control-status registers reading/writing, reading rx reports and writing
+  descriptors. It also takes on some address resolution functions to 
+  simplify RTL design and avoid writedata multiplexing  
+
+  Endpoint logic :
+    - src/dispatcher/netdma_csr.sv 
+    - src/dispatcher/netdma_descriptor_buffer.sv
+
+  Wire listing
+  +---------------+-------+-----------+
+  |  Name         | Width | Direction |  
+  +---------------+-------+-----------+
+  | address       |  13   | input     | 
+  +---------------+-------+-----------+
+  | write         |  1    | input     |           
+  +---------------+-------+-----------+
+  | writedata     |  32   | input     |          
+  +---------------+-------+-----------+
+  | read          |  1    | input     |                   
+  +---------------+-------+-----------+
+  | readdata      |  32   | output    |           
+  +---------------+-------+-----------+
+  | readdatavalid |  1    | output    |                   
+  +---------------+-------+-----------+
+  | tx_irq        |  1    | output    |           
+  +---------------+-------+-----------+
+  | rx_irq        |  1    | output    |           
+  +---------------+-------+-----------+
+  | waitrequest   |  1    | output    |
+  +---------------+-------+-----------+
+
+
+
+  netdma_mm_read_interface
+
+  Type : Avalon-MM master
+
+  Contains a set of wires to initiate fundamental read 
+  transactions and get pipeplined interconnect response
+ 
+  Endpoint logic :
+   - src/readmaster/netdma_mm2st_adapter.sv 
+ 
+  Wire listing
+  +---------------+------------------+-----------+
+  |  Name         |      Width       | Direction |  
+  +---------------+------------------+-----------+
+  | address       | 31               | output    |                 
+  +---------------+------------------+-----------+
+  | readdata      | DATA_WIDTH       | input     |   
+  |               | (see parameters) |           |
+  +---------------+------------------+-----------+
+  | read          |  1               | output    |   
+  +---------------+------------------+-----------+
+  | readdatavalid |  1               | input     |        
+  +---------------+------------------+-----------+
+  | waitrequest   |  1               | input     |        
+  +---------------+------------------+-----------+
+
+
+
+  netdma_mm_write_interface
+
+  Type : Avalon-MM master
+
+  Contains a set of wires to initiate fundamental write transactions.
+
+  Endpoint logic :
+    - src/writemaster/netdma_st2mm_adapter.sv
+
+  Wire listing
+  +---------------+------------------+-----------+
+  | Name          | Width            | Direction |  
+  +---------------+------------------+-----------+
+  | address       | 32               | output    |                 
+  +---------------+------------------+-----------+
+  | writedata     | DATA_WIDTH       | output    |   
+  |               | (see parameters) |           |
+  +---------------+------------------+-----------+
+  | write         |  1               | output    |   
+  +---------------+------------------+-----------+
+  | waitrequest   |  1               | input     |        
+  +---------------+------------------+-----------+
+
+
+
+  netdma_src_interface
+
+  Type : Avalon-ST source
+
+  Contains a set of wires to transport packet data to a streaming sink
+
+  Endpoint logic : 
+    - src/readmaster/netdma_mm2st_adapter.sv
+
+  Wire listing
+  +---------------+--------------------+-----------+
+  | Name          | Width              | Direction |  
+  +---------------+--------------------+-----------+
+  | ready         | 1                  | input     |                                              
+  +---------------+--------------------+-----------+
+  | valid         | 1                  | output    |                             
+  +---------------+--------------------+-----------+
+  | data          | DATA_WIDTH         | output    |
+  |               | (see parameters)   |           |
+  +---------------+--------------------+-----------+
+  | startofpacket | 1                  | output    |                               
+  +---------------+--------------------+-----------+
+  | endofpacket   | 1                  | output    |                        
+  +---------------+--------------------+-----------+
+  | empty         | log2(DATA_WIDTH/8) | output    |                    
+  +---------------+--------------------+-----------+
+
+
+
+
+  netdma_snk_interface
+
+  Type : Avalon-ST sink
+
+  Contains a set of wires to receive packet data from a 
+  streaming source
+
+  Endpoint logic : 
+    - src/writemaster/netdma_st2mm_adapter.sv
+
+  Wire listing
+  +---------------+--------------------+-----------+
+  | Name          | Width              | Direction |  
+  +---------------+--------------------+-----------+
+  | ready         | 1                  | output    |                                              
+  +---------------+--------------------+-----------+
+  | valid         | 1                  | input     |                             
+  +---------------+--------------------+-----------+
+  | data          | DATA_WIDTH         | input     |
+  |               | (see parameters)   |           |
+  +---------------+--------------------+-----------+
+  | startofpacket | 1                  | input     |                               
+  +---------------+--------------------+-----------+
+  | endofpacket   | 1                  | input     |                        
+  +---------------+--------------------+-----------+
+  | empty         | log2(DATA_WIDTH/8) | input     |                    
+  +---------------+--------------------+-----------+
+  | error         | 1                  | input     |                        
+  +---------------+--------------------+-----------+
+
+
+# Parameter listing
+
+  +----------------------------+-----------------+-------------------------------------------------+
+  | parameter                  |  legal values   |                 Description                     |                       
+  +----------------------------+-----------------+-------------------------------------------------+                
+  |                            |    "1" (on),    | When "0", tx part (readmaster and it's          | 
+  |  TX_ENABLE                 |    "0" (off)    | control) will not be synthesized.               | 
+  |                            |                 | Otherwise will.                                 |
+  +----------------------------+-----------------+-------------------------------------------------+                
+  |                            |    "1" (on),    | When "0", rx part (writemaster and it's         | 
+  | RX_ENABLE                  |    "0" (off)    | control) will not be synthesized.               | 
+  |                            |                 | Otherwise will.                                 |
+  +----------------------------+-----------------+-------------------------------------------------+                
+  |                            |                 | The width of a data unit used in one memory     | 
+  | DATA_WIDTH                 |   power of 2    | access act. Must be the same  width as          | 
+  |                            | from 8 to 1024  | readdata/writedata wires in mastered            | 
+  |                            |                 | amm interfaces                                  | 
+  +----------------------------+-----------------+-------------------------------------------------+                
+  |                            |                 | The depth of the fifo that holds descriptors    | 
+  | DESC_FIFO_DEPTH            |   at least 4    | on queue. Your network driver must deal with    |
+  |                            |                 | this value to not overflow netdma with          |
+  |                            |                 | descriptors                                     |
+  +----------------------------+-----------------+-------------------------------------------------+                
+  |                            |                 | The depth of the fifo that holds reports        |
+  |                            |                 | of done rx descriptors ( the most important     |
+  | RX_RESPONSE_FIFO_DEPTH     |   at least 4    | is packet length ). It's strongly recommended   |
+  |                            |                 | not to do this parameter  smaller than          | 
+  |                            |                 | DESC_FIFO_DEPTH                                 |
+  +----------------------------+-----------------+-------------------------------------------------+                
+  |                            |                 | If you want irq request signal that rises       |
+  |                            |    "1" (on),    | up after it's event and then keeps on until     |
+  | LATCH_IRQ_STATUS_ENABLE    |    "0" (off)    | be cleared by driver, set this parameter in     |
+  |                            |                 | "1". Else you will have irq event signal        |
+  |                            |                 | as a strobe after it's event                    |
+  +----------------------------+-----------------+-------------------------------------------------+                
+  |                            |                 | The depth of fifo that used in memory mapped    |
+  |                            |                 | to streaming adapter. The effect of this        |
+  | TX_FIFO_DEPTH              |   at least 4    | parameter on throughput currently unknown,      |
+  |                            |                 | but it must be at least greater than maximum    | 
+  |                            |                 | count of pending read transactions on the       |
+  |                            |                 | read master mastered interface                  |
+  +----------------------------+-----------------+-------------------------------------------------+                
+  |                            |                 | The maximum count of pending read               |
+  | TX_MM_IF_MAX_PENDING_COUNT |   at least 1    | transactions on the read master mastered        |
+  |                            |                 | interface                                       |
+  +----------------------------+-----------------+-------------------------------------------------+                
+  |                            |    "1" (on),    | This parameter being set in "1" enables         |
+  | TX_BYTES_REORDER_ENABLE    |    "0" (off),   | byte reordering from MSB to LSB or vice versa   | 
+  |                            |                 | in tx, like [[3][2][1][0]] --> [[0][1][2][3]]   |
+  +----------------------------+-----------------+-------------------------------------------------+                
+  |                            |                 | When your kernel allocates for outgoing         |
+  | TX_UNALIGNED_ACCESS_ENABLE |    "1" (on),    | packet buffers addresses that aren't            | 
+  |                            |    "0" (off)    | multiplies of the data unit size, you should    |
+  |                            |                 | set this parameter in "1"                       |
+  +----------------------------+-----------------+-------------------------------------------------+                
+  | RX_BYTES_REORDER_ENABLE    |   "1" / "0"     | Same as TX_BYTES_REORDER_ENABLE                 |
+  +----------------------------+-----------------+-------------------------------------------------+                
+  |                            |                 | If this parameter set in "1", address wire      |
+  |                            |                 | width in memory mapped master interfaces        |
+  |                            |    "1" (on),    | (mm_read_if, mm_write_if) will be divided       |
+  | WORD_ADDRESSING            |    "0" (off)    | by count of bytes in the dataunit size. In      |
+  |                            |                 | other words, address wire will be trimmed in    |
+  |                            |                 | the least significant bits, so it will          |
+  |                            |                 | represent word address. If it set in "0",       |
+  |                            |                 | there will be byte addressing.                  |
+  +----------------------------+-----------------+-------------------------------------------------+                
+
+
+# control interface 
+
+## Descriptor
+
+  The first structure you have to know to start a direct memory access transaction
+  is the descriptor structure. Descriptor is a 64 bit dataunit that used do
+  initiate and control one dma transaction for a one packet (to receive it or
+  to transmit). It consist of base address field (where the buffer of a packet
+  to transmit starts or where the buffer for received packet starts), packet
+  length field (bytecount) to specify length of a tx packet or protect system
+  memory from too long rx packets, and some more (see the details table).
+
+  The descriptor receiving logic is designed for receiving a descriptor in two
+  32 bit parts, first address and then control field. 
+
+  Descriptror structure details:
+  +-------+---------------+-------------------------+----------------------------------------------+
+  |       |               |      substructure       |                                              |
+  | bits  |     name      +-------+-----------------+                description                   |
+  |       |               | bits  |      name       |                                              |
+  +-------+---------------+-------+-----------------+----------------------------------------------+
+  |       |               | 31:16 | bytecount       | For tx type descriptor: count of bytes to    |
+  |       |               |       |                 | transmit (packet length)                     |
+  |       |               |       |                 | For rx type descriptors: the maximum count   | 
+  |       |               |       |                 | of bytes that can be received                |
+  |       |               |       |                 | (packet length limit)                        |
+  |       |               +-------+-----------------+----------------------------------------------+
+  |       |               | 15:8  | sequence number | Descriptor identificatior. If you do cyclic  | 
+  |       |               |       |                 | identification, don't use numbers greater    | 
+  |       |               |       |                 | than the count of descriptors this module    | 
+  |       |               |       |                 | can store. This field can be extended at the |
+  |       |               |       |                 | expense of not used bytes                    |
+  |       |               +-------+-----------------+----------------------------------------------+
+  |       |               | 6:8   | not used        |                                              |
+  | 63:32 | control field +-------+-----------------+----------------------------------------------+
+  |       |               | 5     | stop_on_error   | Terminate this transaction, if the error     | 
+  |       |               |       |                 | signal of datastream interface is active     |
+  |       |               +-------+-----------------+----------------------------------------------+
+  |       |               | 4     | disable_tx_irq  | Disable irq only for current transaction     |
+  |       |               |       |                 | (packet transmitted)                         |
+  |       |               +-------+-----------------+----------------------------------------------+
+  |       |               | 3     | disable_rx_irq  | Disable irq only for current transaction     |
+  |       |               |       |                 | (packet received)                            |
+  |       |               +-------+-----------------+----------------------------------------------+
+  |       |               | 2:1   | desc_type*      | The type of this descriptor                  |
+  |       |               |       |                 | ( 01 -- read type, 10 -- write type )        |
+  |       |               +-------+-----------------+----------------------------------------------+
+  |       |               | 0     | go              | Reserved for hardware needs. Writing into    |
+  |       |               |       |                 | this field has no effect.                    | 
+  +-------+---------------+-------+-----------------+----------------------------------------------+
+  | 31:0  |   address     |  --   |       --        | Base address of the corresponding            | 
+  |       |               |       |                 | packet buffer in system memory               |
+  +-------+---------------+-------+-----------------+----------------------------------------------+
+  * -- this field has no effect on current design logic, but can be useful for
+  verification purposes or perspective modifications 
+
+## Control-status registers 
+
+  Another facility to run and control the netdma core is a set of control-status
+  registers. Detailed description see in REGMAP file. 
+ 
+# Programming tips
+
+  The most important things about this module you have to know when writing a driver:
+  
+  1. When you are allocating memory for incoming packets, be aware that the module
+     will write a ceiled to the data unit byte size count of actual bytes received.
+     To prevent buffer owerflow or least packet bytes cut off, do something like this
+     with the space size you allocate:
+     rx_data_size += DMA_DATAUNIT_BYTE_SIZE - (rx_data_size % DMA_DATAUNIT_BYTE_SIZE)
+    
+  2. There are some mechanisms intended to track the count of free space for new 
+     descriptors in this module. For tx transfers it's good to use tx sequence number
+     in the status register. If you do cyclic descriptor identification, you can read
+     the status register to know the progress. For rx transfers: because you are normally
+     got the rx report with every received packet, you know when you got it, rx 
+     descriptor buffer has at least one free space more (off course if you didn't
+     the rx descriptor buffer depth less than the depth of the rx report buffer)
+
+  There also good things you can do:
+
+  1. Those mutable irq's in the cpu interface are good for napi technique. If you are a linux
+     programmer, try this. Or suffer ^_^
+
+  2. When writing a descriptor, be sure you're always writing an address first, then
+     a control field.
+
+  3. Check *x_desc_buf_full flags in the status register before writing a descriptor.
+     Normally, if your driver made correctly and parameters calculated right, it should 
+     be always down.
+
+  4. If you just start to run your new system, make a check of the bytecount field
+     in rx reports, otherwise you can crash your system with zero length packets or
+     buffer overflow
+
+  Thats all. All you need then is to make some macros for easy registers and the 
+  descriptor structure fields access, some structures for holding the data got from a
+  rx report or tx status. There are the next functions that can be enough for driving 
+  this module:
+     * reset function (just sets the reset bit and then clears)
+     * write tx descriptor (get the buffer address, packet length, sequence number,
+       check tx descriptors buffer empty flag and write a descriptor in two parts).
+     * write rx descriptor (same as the previous, but the packet length and seq
+       number is not necessary)
+     * read rx response (get a driver rx response data structure, read the rx response
+       register, parse it and fill the got structure)
+     * read tx stat (just like the previous)
+     * irq handler (depending on whether programming model you use; 
+       for example, here could be irq turn off and enabling polling).
+
+  ------------------------------------------------------------------------------------
+  Thank you for reading. Good luck!
+  I'm waiting your feedback at
+  d.hodyrev@metrotek.spb.ru
+
+ 
+
+
+
+
+
+
+ 

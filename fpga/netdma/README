@@ -1,0 +1,74 @@
+# Overall
+
+  This is the project of the netdma (network direct memory access) ip core written in 
+  systemverilog design language and oriented on the Altera interface specifications.
+  Project features:
+  * Fit, reduced and easy to use in a network stack DMA controller.
+  * Systemverilog language for comfort learning and modification.
+  * Driver interfaces, designed with respect to common network driver model.
+  * Restricted count of slave interfaces to communicate with a host processor.
+    (for example, a two port system should have multiplexing only for two DMA 
+     controller slave interfaces. With other ip cores (for example, Altera 
+     modular SGDMA) such system may have a need for multiplexing for ten DMA 
+     controller slave interfaces in their fpga to host processor interconnect. 
+  * GPL license.
+
+  For usage details
+  please read the user guide in doc. In this file you can find the project overall
+
+
+# module instance hierarchy
+
+  Prefixes 'netdma' are removed for the convenience. 
+
+  + netdma (top)
+  |-- + dispatcher
+      | -- + control (tx, optional)
+           | -- + control_fsm
+      | -- + control (rx, optional)
+           | -- + control_fsm
+      | -- + csr
+      | -- + descriptor_buffer (tx, optional)
+      | -- + descriptor_buffer (rx, optional)
+
+      + readmaster (tx, optional)
+      |-- + mm2st_adapter
+          |-- + bytes_reorder_unit (optional)
+          |-- + amm_data_aligner (optional)
+          |-- + fifo_showahead   
+
+      + writemaster (rx, optional)
+          |-- + st2mm_adapter
+          |-- + bytes_reorder_unit (optional)
+
+
+# Some answers ahead
+
+  * This ip core -- the hier of the Altera modular scatter gather direct memory access 
+    (msgdma) ip core?
+  -- In many respects.
+
+  * Why there transmit and receive logic is combined in one monolithic module? 
+    Isn't more useful to have two instances for a one port, one for receiving,
+    one for transmitting?
+  -- Yes, this is controversial decision. But i more like this because:
+     - More suitable architectural view. One port -- one controller.
+     - Both tx and rx logic of the direct memory access of a one port are controlled
+       by one driver, so it's useful to share one slave port, one control and one
+       status register between tx and rx functions.
+     - Anyway if necessary, you can disable tx or rx logic by module parameters with
+       saving all equivalent area.
+
+  * Why do you write so illiterate?
+  -- I'm not an english speaker, sorry :) 
+
+  
+# Modification tips
+
+   If you modify some logic of this module, remember, that some information
+   about can be duplicated in some places. For example, parameter description 
+   is detailed in the user guide in /doc and in the instance example. 
+
+# Contacts
+
+   d.hodyrev@metrotek.spb.ru

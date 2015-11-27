@@ -1,0 +1,139 @@
+Here is the map of all entities accessible from a host processor through
+memory mapped io interface (netdma_cpu_interface), registers and buffers.
+
+  +------------------+--------------------+------------------------+
+  |  address offset  |      entity        |        access          |
+  +------------------+--------------------+------------------------+
+  |       0x0        |  control register  |   RW + SC (some bits)* |
+  +------------------+--------------------+------------------------+
+  |       0x4        |  status register   |          RO            |
+  +------------------+--------------------+------------------------+
+  |       0x8        |  rx report fifo    |  RO (pop out reading)  |
+  +------------------+--------------------+------------------------+
+  |       0xC        | tx descriptor fifo |          WO            |
+  +------------------+--------------------+------------------------+
+  |       0x10       | rx descriptor fifo |          WO            |
+  +------------------+--------------------+------------------------+
+  *- SC (srelf-cleared) see control register description for details
+
+  
+  ### control register ###
+
+  This register is used to manage irq's behaviour and reset netdma. Typically after
+  start net driver cause reset by writing 0x1 into this regiser, then clears
+  reset bit and enables itq's by writing 0x6.
+
+  +-------+------------------------+--------+-------------------------------------------+
+  | bits  |  name                  | access |       description                         |
+  +-------+------------------------+--------+-------------------------------------------+
+  | 31:7  |  not used              |        |                                           |
+  +-------+------------------------+        +-------------------------------------------+
+  |   6   |  clear_tx_irq_pending  |        | clears tx irq pending bit if it set       |
+  |       |                        |   RW   | (2nd bit in status register)              |
+  +-------+------------------------+        +-------------------------------------------+
+  |   5   |  clear_rx_irq_pending  |        | clears rx irq pending bit if it set       |
+  |       |                        |        | (1nd bit in status register)              |
+  +-------+------------------------+--------+-------------------------------------------+
+  |   4   |  clear_tx_irq_status   |        | Actual only when LATCH_IRQ_STATUS_ENABLE  |
+  |       |                        |        | feature enable. Used to clear tx irq      |
+  |       |                        |        | status by a driver. SELF CLEARED          |
+  +-------+------------------------+   SC   +-------------------------------------------+
+  |   3   |  clear_rx_irq_status   |        | Actual only when LATCH_IRQ_STATUS_ENABLE  |
+  |       |                        |        | feature enable. Used to clear rx irq      |
+  |       |                        |        | status by a driver. SELF CLEARED          |
+  +-------+------------------------+--------+-------------------------------------------+
+  |   2   |  tx_irq_enable         |        | Enables tx irq either it latched or       |
+  |       |                        |        | performed as a strobe.                    |
+  +-------+------------------------+        +-------------------------------------------+
+  |   1   |  rx_irq_enable         |   RW   | Enables tx irq either it latched or       |
+  |       |                        |        | performed as a strobe.                    |
+  +-------+------------------------+        +-------------------------------------------+
+  |   0   |  reset                 |        | Host reset. Carried out to the netdma top |
+  |       |                        |        | level, than distributed to all submodules |
+  +-------+------------------------+--------+-------------------------------------------+
+
+
+  ### status register ###
+ 
+  This register content combines both necessary signals like *_desc_buf_full
+  and minor signals like disable_*_irq, which are used rather for internal
+  purposes, but also can be used in debug from cpu. It also contain 
+
+
+  +-------+------------------------+--------+-------------------------------------------+
+  | bits  |  name                  | access |        description                        |
+  +-------+------------------------+--------+-------------------------------------------+
+  | 31:21 |  not used              |        |                                           |
+  +-------+------------------------+        +-------------------------------------------+
+  |  21   | disable_tx_irq         |        | If set, irq disabled for the last done tx |
+  |       |                        |        | transaction (by one flag in descriptor)   |
+  +-------+------------------------+        +-------------------------------------------+
+  |  20   | disable_rx_irq         |        | If set, irq disabled for the last done rx |
+  |       |                        |        | transaction (by one flag in descriptor)   |
+  +-------+------------------------+        +-------------------------------------------+
+  | 19:12 | tx_last_seq_number     |        | The number of the last done tx            |
+  |       |                        |        | transaction (been set in it's descriptor) |
+  +-------+------------------------+        +-------------------------------------------+
+  |  11   | tx_with_errors         |        | The last done tx transaction had errors   |
+  +-------+------------------------+        +-------------------------------------------+
+  |  10   | tx_is_any_done         |        | Is any tx transactions done since reset   |
+  +-------+------------------------+        +-------------------------------------------+
+  |   9   | rx_report_buf_empty    |   RO   | Module has no rx reports (yet or already) |
+  +-------+------------------------+        +-------------------------------------------+
+  |  8:7  | tx_control_state       |        | Main control FSM state (for debug purps)  |
+  +-------+------------------------+        +-------------------------------------------+
+  |  6:5  | rx_control_state       |        | Main control FSM state (for debug purps)  | 
+  +-------+------------------------+        +-------------------------------------------+
+  |   4   | tx_desc_buf_full       |        | Tx descriptor buffer is full              |
+  +-------+------------------------+        +-------------------------------------------+
+  |   3   | rx_desc_buf_full       |        | Rx descriptor buffer is full              |
+  +-------+------------------------+        +-------------------------------------------+
+  |   2   | tx_irq_pending         |        | Can be set if tx_irq_enable bit in        |
+  |       |                        |        | the control register is not set and       |
+  |       |                        |        | a tx irq event occurs                     |
+  +-------+------------------------+        +-------------------------------------------+
+  |   1   | rx_irq_pending         |        | Can be set if rx_irq_enable bit in        |
+  |       |                        |        | the control register is not set and       |
+  |       |                        |        | a rx irq event occurs                     |
+  +-------+------------------------+        +-------------------------------------------+
+  |   0   | reset_state            |        | --> waitrequest on netdma_cpu_interface   |
+  +-------+------------------------+--------+-------------------------------------------+
+
+
+  ### rx report ###
+
+  In fact, this is an output data of showahead fifo (with read request acting as
+  a confirmation of reading). Read it's address causes read request signal of
+  fifo and retrieves data word (one rx report) from the fifo buffer. 
+  The most important field in this structure is bytecount that holds the length of
+  the received packet. Other fields rather can be used for debug purposes.
+
+  +-------+------------------------+--------+-------------------------------------------+
+  | bits  |  name                  | access | description                               |
+  +-------+------------------------+--------+-------------------------------------------+
+  | 31:16 | bytecount              |        | Byte size of the last received packet     |
+  |       |                        |        | (done rx transaction)                     |
+  +-------+------------------------+        +-------------------------------------------+
+  | 15:8  | sequence number        |        | The number of the last done rx            |
+  |       |                        |        | transaction (been set in it's descriptor) |
+  +-------+------------------------+   RO   +-------------------------------------------+
+  |  7:3  | not_used               | (pop   |                                           |
+  +-------+------------------------+  out)  +-------------------------------------------+
+  |   2   | error                  |        | The last done rx transaction had errors   |
+  +-------+------------------------+        +-------------------------------------------+
+  |   1   | disable_irq            |        | For the last done rx transaction irq was  |
+  |       |                        |        | disabled                                  |
+  +-------+------------------------+        +-------------------------------------------+
+  |   0   | is_report              |        | Marks valid rx report                     |
+  +-------+------------------------+--------+-------------------------------------------+
+  
+
+  ### tx descriptor fifo ###
+
+  This entity is write only accessible. Writing on this address causes one step
+  deserializing writedata and then pushing it into the fifo.
+
+  ### rx descriptor fifo ###
+
+  Same as the tx descriptor fifo.
+

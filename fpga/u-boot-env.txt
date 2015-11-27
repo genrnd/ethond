@@ -1,0 +1,39 @@
+axibridge=ffd0501c
+axibridge_handoff=0x00000002
+baudrate=115200
+bootcmd=run fpgaboot; run bridge_enable_handoff; run mmcboot
+bootdelay=1
+bootdir=boot
+bootfile=uImage
+bridge_disable=mw $fpgaintf 0; mw $fpga2sdram 0; go $fpga2sdram_apply; mw $axibridge 0; mw $l3remap 0x1 
+bridge_enable_handoff=mw $fpgaintf ${fpgaintf_handoff}; go $fpga2sdram_apply; mw $fpga2sdram ${fpga2sdram_handoff}; mw $axibridge ${axibridge_handoff}; mw $l3remap ${l3remap_handoff} 
+con_args=setenv bootargs ${bootargs} console=${console},${baudrate}
+console=ttyS0
+ethact=mii0
+ethaddr=00:01:02:03:04:05
+fdt_addr_r=0xf00000
+fdt_file=soc.dtb
+fpga2sdram=ffc25080
+fpgadata=0x10000000
+fpgaboot=setenv fpga2sdram_handoff 0x3fff; ext2load mmc 0:2 ${fpgadata} ${fpgafile}; fpga load 0 ${fpgadata} ${filesize}
+fpgafile=/lib/firmware/fpga/fpga.rbf
+fpgaintf=ffd08028
+fpgaintf_handoff=0x00000000
+kernel_addr_r=0x7fc0
+l3remap=ff800000
+l3remap_handoff=0x00000009
+misc_args=setenv bootargs ${bootargs} quiet uio_pdrv_genirq.of_id=generic-uio
+mmc_args=setenv bootargs ${bootargs} root=${root} rw rootwait
+mmcboot=mmc rescan; ext2load mmc 0:${rootpart} ${kernel_addr_r} ${bootdir}/${bootfile}; ext2load mmc 0:${rootpart} ${fdt_addr_r} ${bootdir}/${fdt_file}; run mmc_args con_args misc_args; bootm ${kernel_addr_r} - ${fdt_addr_r}
+root=/dev/mmcblk0p2
+root0=/dev/mmcblk0p2
+root0part=2
+root1=/dev/mmcblk0p3
+root1part=3
+rootpart=2
+setenv_ethaddr_eeprom=3ff9ad4d
+stderr=serial
+stdin=serial
+stdout=serial
+verify=n
+

@@ -1,0 +1,13 @@
+ethond (0.0.1-1) stable; urgency=low
+  2015/11/25
+    * Integrated Netdma IP core.
+
+-- Alexander Nikolaenko <a.nikolaenko@metrotek.spb.ru>  Tue, 25 Nov 2015 17:48:59 +0300   
+
+
+ethond (0.0.1-0) stable; urgency=low
+  2015/10/20
+    ! *:
+      Initial fpga bsp project.
+
+ -- Alexander Nikolaenko <a.nikolaenko@metrotek.spb.ru>  Tue, 20 Oct 2015 13:48:59 +0300

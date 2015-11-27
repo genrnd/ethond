@@ -1,0 +1,60 @@
+`define MPLS_TYPE0 16'h8847 //4788
+`define MPLS_TYPE1 16'h8848  //4888
+`define IP_TYPE    16'h0800
+`define IPV6_TYPE  16'h86DD
+
+//Positions for one mpls
+`define MPLS0_1VLAN_3VLAN_POS  0
+`define MPLS0_NOVLAN_2VLAN_POS 1
+
+//Positions for two mpls
+`define MPLS1_POS  1 //doesn't depend on vlan counts
+
+//Positions for three mpls
+`define MPLS2_1VLAN_3VLAN_POS  1
+`define MPLS2_NOVLAN_2VLAN_POS 2
+
+//Bits position for first mpls
+`define MPLS0_NOVLAN_2VLAN_B0 15:8 
+`define MPLS0_NOVLAN_2VLAN_B1  7:0 
+`define MPLS0_NOVLAN_2VLAN_B2 63:56
+`define MPLS0_NOVLAN_2VLAN_B3 55:48
+
+`define MPLS0_1VLAN_3VLAN_B0 47:40
+`define MPLS0_1VLAN_3VLAN_B1 39:32
+`define MPLS0_1VLAN_3VLAN_B2 31:24
+`define MPLS0_1VLAN_3VLAN_B3 23:16
+
+
+//Bits position for second mpls
+`define MPLS1_1VLAN_3VLAN_B0 15:8 
+`define MPLS1_1VLAN_3VLAN_B1  7:0 
+`define MPLS1_1VLAN_3VLAN_B2 63:56
+`define MPLS1_1VLAN_3VLAN_B3 55:48
+
+`define MPLS1_NOVLAN_2VLAN_B0 47:40
+`define MPLS1_NOVLAN_2VLAN_B1 39:32
+`define MPLS1_NOVLAN_2VLAN_B2 31:24
+`define MPLS1_NOVLAN_2VLAN_B3 23:16
+
+//Bits position for third mpls
+`define MPLS2_NOVLAN_2VLAN_B0 15:8 
+`define MPLS2_NOVLAN_2VLAN_B1  7:0 
+`define MPLS2_NOVLAN_2VLAN_B2 63:56
+`define MPLS2_NOVLAN_2VLAN_B3 55:48
+
+`define MPLS2_1VLAN_3VLAN_B0 47:40
+`define MPLS2_1VLAN_3VLAN_B1 39:32
+`define MPLS2_1VLAN_3VLAN_B2 31:24
+`define MPLS2_1VLAN_3VLAN_B3 23:16
+
+`define MPLS0_1VLAN_3VLAN_BOS_BIT  32
+`define MPLS0_NOVLAN_2VLAN_BOS_BIT 0
+`define MPLS0_BOS_BIT              8
+
+`define MPLS1_1VLAN_3VLAN_BOS_BIT 0
+`define MPLS1_NOVLAN_2VLAN_BOS_BIT 32
+`define MPLS1_BOS_BIT              8
+
+`define MPLS2_1VLAN_3VLAN_BOS_BIT 32
+`define MPLS2_NOVLAN_2VLAN_BOS_BIT 0

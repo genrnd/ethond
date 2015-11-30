@@ -5,8 +5,7 @@
 
 
 
-Сборка FPGA
-------------
+# Сборка FPGA
  
  1. Распаковать архив с проектом или скачать последнею версия проекта из системы контроля версий (Github)
  2. Запустить Quartus GUI и открыть проект в созданной папке с исходниками (файл ethond.qpf)
@@ -16,8 +15,7 @@
     Этот файл нужно перенести на microSD карту в директорию /lib/firmware/fpga (этот путь используется по умолчанию )
 
 
-Сборка Preloader/U-boot
------------------------
+# Сборка Preloader/U-boot
 
  Предварительно требуется провести сборку и компиляции FPGA, так как часть нужных файлов появиться только на этапе Assembler'а.
  Дальнейшие действия проводятся в консольном режиме OS (запустить cmd.exe в Windows или установленный терминал в Linux)
@@ -33,7 +31,7 @@
      /opt/altera/quartus14.0/embedded/embedded_command_shell.sh 
 
 
-  Генерируем файлы для U-boot и Preloader:
+ ## Генерируем файлы для U-boot и Preloader:
     1. Выполнить следующую команду с указнными настройками:
        bsp-create-settings --type spl --bsp-dir build --preloader-settings-dir soc_ethond_hps_0    --settings build/settings.bsp --set spl.boot.WATCHDOG_ENABLE false
     
@@ -48,8 +46,8 @@
 
 
 
-После проведения всех действий будут получены следующие необходимые файлы
-------------------------------
+# После проведения всех действий будут получены следующие необходимые файлы
+
   output_files/ethond.rbf
 
   hps_isw_handoff/build/preloader-mkpimage.bin

@@ -17,7 +17,7 @@
 
 # Сборка Preloader/U-boot
 
- Предварительно требуется провести сборку и компиляции FPGA, так как часть нужных файлов появиться только на этапе Assembler'а.
+ Предварительно требуется провести сборку и компиляции FPGA, так как часть необходимых файлов появится только на этапе Assembler'а.
  Дальнейшие действия проводятся в консольном режиме OS (запустить cmd.exe в Windows или установленный терминал в Linux)
 
  Требуется загрузить скрипт из каталога программы Quartus, который добавит в переменную PATH всё необходимое:
@@ -46,10 +46,10 @@
 
 
 
-# После проведения всех действий будут получены следующие необходимые файлы
+# Результат
+После проведения всех действий будут получены следующие необходимые файлы:
 
-  output_files/ethond.rbf
-
-  hps_isw_handoff/build/preloader-mkpimage.bin
-  hps_isw_handoff/build/uboot-socfpga/u-boot.img
-  hps_isw_handoff/u-boot-env.img
+  1. output_files/ethond.rbf
+  2. hps_isw_handoff/build/preloader-mkpimage.bin
+  3. hps_isw_handoff/build/uboot-socfpga/u-boot.img
+  4. hps_isw_handoff/u-boot-env.img

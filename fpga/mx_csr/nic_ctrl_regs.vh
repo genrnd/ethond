@@ -3,7 +3,7 @@
 
 */
 
-`define NIC_CTRL_VER 16'h0_0_0_1
+`define NIC_CTRL_VER 16'h0_0_0_2
 
 /* CONTROL REGISTERS */
 
@@ -27,7 +27,15 @@
         `define NIC_MAIN_CR_MODE_B0 0
         `define NIC_MAIN_CR_MODE_B1 1
 
-`define NIC_CTRL_CR_CNT    8
+
+// значение MTU, установленное для интерфейса
+`define NIC_CTRL_MTU       8
+        `define NIC_CTRL_MTU_B0   0
+        `define NIC_CTRL_MTU_B13  13
+
+
+`define NIC_CTRL_CR_CNT    9
+
 
 /* STATUS REGISTERS */
 
@@ -69,4 +77,10 @@
     0x3 - промиск режим: отключается проверка на MAC_DST: на сетевой будут уходить все пакеты,
           кроме тех, которые признаны "плохими" [битая CRC, etc] и "тестовыми".
           Подробнее, как обычно см. в traf_engine_rx_dir_resolver.
+
+  Настройка значения MTU, установленного для интерфейса:
+    FPGA должно знать установленный MTU, что бы пакеты с размером больше MTU дропались, 
+    а не уходили на CPU. Используются младшие 14 бит для значения MTU. 
+    В сетевом драйвере присутствует ограничение MTU в 9600.
+
 */

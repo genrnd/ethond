@@ -148,7 +148,7 @@ rx_cpu rx_cpu(
   // Network side
   .pkt_i                                  ( pkt_rx_dmx[RX_DIR_CPU]  ),
   .pkt_size_i                             ( pkt_rx_stat_w.pkt_size  ),
-  .cpu_mtu_i                              ( 16'd1518                ),
+  .cpu_mtu_i                              ( nic_if.mtu              ),
   .pkt_wa_o                               ( dir_cpu_wa              ),  
   // CPU side
   .pkt_o                                  ( pkt_to_cpu_o            )

@@ -18,7 +18,7 @@
 */
 
 /*
-  Модуль преобразования csr_if в интерфейсы управления сетевым стеком. 
+  There is module, which converts csr interface to the NIC control interface. 
 
 */
 
@@ -60,7 +60,7 @@ generate
       localparam SR_OFFSET    = port_bit_mask_to_offset( g, PORT_BIT_MASK, ONE_PORT_SR_CNT );
       localparam PORT_ENABLE  = PORT_BIT_MASK[g];
 
-      // портовые контрольные и статусные регистры
+      // Control and status registers for every port
       logic [D_WIDTH-1:0] p_cregs_w [ONE_PORT_CR_CNT-1:0];
       logic [D_WIDTH-1:0] p_sregs_w [ONE_PORT_SR_CNT-1:0];
       
@@ -103,6 +103,10 @@ generate
       assign nic_ctrl_if[g].also_use_alt_host_mac = ( nic_mode[1]       );
       assign nic_ctrl_if[g].promisc_mode          = ( nic_mode == 2'b11 );
 
+      assign nic_ctrl_if[g].mtu                   = {2'd0, p_cregs_w[ `NIC_CTRL_MTU ][`NIC_CTRL_MTU_B13:
+                                                                                      `NIC_CTRL_MTU_B0 ] };
+
+
       assign p_sregs_w[`NIC_CTRL_VER_SR] = `NIC_CTRL_VER; 
 
     end
@@ -114,7 +118,7 @@ regfile_with_be #(
   .STAT_CNT                               ( SR_CNT               ), 
   .ADDR_W                                 ( A_WIDTH              ), 
   .DATA_W                                 ( D_WIDTH              ), 
-  .SEL_SR_BY_MSB                             ( 0                    )
+  .SEL_SR_BY_MSB                          ( 0                    )
 ) nic_regfile (
   .clk_i                                  ( regfile_if.clk       ),
   .rst_i                                  ( 1'b0                 ),

@@ -41,13 +41,18 @@ interface nic_ctrl_if( input clk_i );
   // пойдут на CPU, кроме тестовых и плохих
   logic        promisc_mode;
 
+  // Значение MTU, установленное для интерфейса
+  logic [15:0] mtu;
+
+
 modport csr(
   output host_mac,
          encaps_vlan,
 
          alt_host_mac,
          also_use_alt_host_mac,
-         promisc_mode
+         promisc_mode,
+         mtu
 );
 
 modport app(
@@ -56,7 +61,8 @@ modport app(
         encaps_vlan,
         alt_host_mac,
         also_use_alt_host_mac,
-        promisc_mode
+        promisc_mode,
+        mtu
 );
 
 endinterface

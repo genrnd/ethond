@@ -1,3 +1,11 @@
+ethond (0.0.1-2) stable; urgency=low
+  2015/12/30
+    * Add support for Jumbo frames up to 9600 bytes.
+      Used MTU value configurated by ifconfig. 
+
+
+-- Alexander Nikolaenko <a.nikolaenko@metrotek.spb.ru>  Tue, 30 Dec 2015 17:48:59 +0300  
+
 ethond (0.0.1-1) stable; urgency=low
   2015/11/25
     * Integrated Netdma IP core.

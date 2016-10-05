@@ -1,0 +1,7 @@
+reg16 (0.0.1) unstable; urgency=low
+  2015/10/12
+    + reg16.c:
+        Utility for access to control/status FPGA registers.
+      [dg]
+
+ -- Denis Gabidullin <d.gabidullin@metrotek.spb.ru>  Mon, 12 Oct 2015 15:49:08 +0300

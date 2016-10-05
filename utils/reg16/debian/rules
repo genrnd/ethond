@@ -1,0 +1,20 @@
+#!/usr/bin/make -f
+# -*- makefile -*-
+
+# Uncomment this to turn on verbose mode.
+#export DH_VERBOSE=1
+
+DEB_HOST_MULTIARCH ?= $(shell dpkg-architecture -qDEB_HOST_MULTIARCH)
+
+override_dh_strip:
+	dh_strip -preg16 --dbg-package=reg16-dbg
+
+override_dh_auto_configure:
+	PKG_CONFIG_PATH=/usr/lib/$(DEB_HOST_MULTIARCH)/pkgconfig \
+	dh_auto_configure -- \
+	                  --host=$(DEB_HOST_MULTIARCH) \
+	                  --prefix=/usr  \
+	                  --libdir=/usr/lib/$(DEB_HOST_MULTIARCH)
+
+%:
+	dh $@ --with autoreconf

@@ -1,0 +1,23 @@
+reg16 (0.0.2) unstable; urgency=low
+  2016/10/06
+    
+    - AUTHORS, Makefile.am, NEWS, configure.ac, debian/reg16.install:
+    + Makefile:
+        Use make forbuilding instead of autotools [vg]
+    * README.md: Fix text formatting for ability to generate manpage with `ronn`
+        utility; add reg16 usage exaples; some text corrections [vg]
+    * README.ru.md: Add reg16 usage examples; some text corrections [vg]
+
+ -- Vladimir Georgiev <v.georgiev@metrotek.spb.ru>  Thu, 06 Oct 2016 15:48:28 +0300
+
+ 2016/10/15
+    * main.c: Check for address and data values is in range [dvh, vg].
+    + README.md, README.ru.md: complete documentation [dvh, vg]
+
+reg16 (0.0.1) unstable; urgency=low
+  2015/10/12
+    + reg16.c:
+        Utility for access to control/status FPGA registers.
+      [dg]
+
+ -- Denis Gabidullin <d.gabidullin@metrotek.spb.ru>  Mon, 12 Oct 2015 15:49:08 +0300

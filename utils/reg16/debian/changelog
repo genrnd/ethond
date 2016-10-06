@@ -1,7 +1,8 @@
 reg16 (0.0.2-1) unstable; urgency=low
 
     * Upstream version increased [dvh, vg]
-
+    * control, rules: use make instead of autotools [vg]
+    
  -- Vladimir Georgiev <v.georgiev@metrotek.spb.ru>  Wed, 05 Oct 2016 17:18:57 +0300
 
 reg16 (0.0.1-1) unstable; urgency=low

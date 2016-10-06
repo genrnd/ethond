@@ -1,5 +1,5 @@
-reg16
-=====
+reg16(1) -- read/write SoC Cyclone V FPGA registers.
+====================================================
 
 SYNOPSIS
 --------
@@ -17,16 +17,25 @@ The utility deals with 16-bit registers, accepting an index of such a register
 and printing its contents or writing to it if the data to be written is
 specified.
 
+REG add WRITE_DATA values must be specified in hex format with range from 0x0 to
+0xffff.
+
+For example:
+
+  * `reg16 0xaaff` -- reads value 0xaaff register
+  * `reg16 0xaaff 0x4` -- writes value to 0xaaff register
+
 BUILDING
 --------
 
-  This program is built using autotools.
+  Fetch sources from https://github.com/STC-Metrotek/ethond/utils.
+  Then:
+  
+  * `cd utils/reg16 && make` to build reg16
+  * `cd utils/reg16 && make deb` to create debian package
 
-    autoreconf -fiv
-    ./configure
-    make && make install
-
-  See documentation for autotools for details.
+  Package build requires `ruby-ronn` for converting man page and 
+  `debhelper` for creating debian package. 
 
 AUTHORS
 -------

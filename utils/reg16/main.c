@@ -24,7 +24,7 @@ int main( int argc, char *argv[] )
 
   if( argc < 2 || argc > 3 ) {
     printf( USAGE, argv[ 0 ] );
-    exit( -2 );
+    exit( EINVAL );
   }
 
   uint8_t *map_page_addr, *map_byte_addr; 
@@ -36,7 +36,7 @@ int main( int argc, char *argv[] )
   if( *rest || raw_data >= MAP_SIZE ) {
     fprintf(stderr, "Expected register index from 0 to %d; got %s.\n",
         MAP_SIZE - 1, argv[ 1 ]);
-    exit( -2 );
+    exit( EINVAL );
   }
   reg_idx = raw_data;
 
@@ -44,7 +44,7 @@ int main( int argc, char *argv[] )
   fd = open( MEM_FNAME, O_RDWR | O_SYNC );
   if( fd < 0 ) {
     perror( "open" );
-    exit( -1 ); 
+    exit( EBADF ); 
   }
 
   /* We mmap /dev/mem into our address space and receive the resulting page
@@ -53,7 +53,7 @@ int main( int argc, char *argv[] )
       H2F_ADDR );
   if( map_page_addr == MAP_FAILED ) {
     perror( "mmap" );
-    return_code = -1;
+    return_code = errno;
     goto CLOSE_FD;
   }
 
@@ -71,7 +71,7 @@ int main( int argc, char *argv[] )
       fprintf( stderr,
           "Expected data to be a number in range of [0; 0xFFFF], got %s\n.",
           argv[ 2 ] );
-      return_code = -2;
+      return_code = EINVAL;
       goto MUNMAP;
     }
     data = raw_data;
@@ -85,13 +85,13 @@ int main( int argc, char *argv[] )
 MUNMAP:
   if( munmap( map_page_addr, MAP_SIZE ) ) {
     perror( "munmap" );
-    return_code = return_code == 0 ? -1 : return_code;
+    return_code = errno;
   }
 
 CLOSE_FD:
   if( close( fd ) ) {
     perror( "close" );
-    return_code = return_code == 0 ? -1 : return_code;
+    return_code = EBADF;
   };
   return return_code;
 }

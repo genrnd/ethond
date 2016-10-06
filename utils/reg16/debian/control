@@ -1,8 +1,8 @@
 Source: reg16
 Section: misc
 Priority: extra
-Maintainer: Sergey Nazaryev <sn@metrotek.spb.ru>
-Build-Depends: debhelper:all (>= 9.0.0), dh-autoreconf:all, pkg-config:native
+Maintainer: Vladimir Georgiev <v.georgiev@metrotek.spb.ru>
+Build-Depends: debhelper:all (>= 9.0.0), ruby-ronn
 Standards-Version: 3.9.2
 Homepage: http://metrotek.spb.ru/code/reg16
 
@@ -11,8 +11,3 @@ Architecture: any
 Depends: ${misc:Depends}
 Description: Utility for reading 16-bit registers from shared memory of Altera SoC's HPS and FPGA
 
-Package: reg16-dbg
-Architecture: any
-Depends: reg16 (= ${binary:Version})
-Description: Utility for reading 16-bit registers from shared memory of Altera SoC's HPS and FPGA
- This package contains the debugging information (symbols).

@@ -42,7 +42,7 @@ set_global_assignment -name DEVICE 5CSEBA4U19C8
 set_global_assignment -name TOP_LEVEL_ENTITY top_ethond
 set_global_assignment -name ORIGINAL_QUARTUS_VERSION 14.0
 set_global_assignment -name PROJECT_CREATION_TIME_DATE "15:13:09  SEPTEMBER 01, 2014"
-set_global_assignment -name LAST_QUARTUS_VERSION 14.0
+set_global_assignment -name LAST_QUARTUS_VERSION 16.0.2
 set_global_assignment -name PROJECT_OUTPUT_DIRECTORY output_files
 set_global_assignment -name ERROR_CHECK_FREQUENCY_DIVISOR 256
 set_global_assignment -name POWER_PRESET_COOLING_SOLUTION "23 MM HEAT SINK WITH 200 LFPM AIRFLOW"
@@ -455,6 +455,8 @@ set_global_assignment -name OUTPUT_IO_TIMING_NEAR_END_VMEAS "HALF VCCIO" -fall
 set_global_assignment -name OUTPUT_IO_TIMING_FAR_END_VMEAS "HALF SIGNAL SWING" -rise
 set_global_assignment -name OUTPUT_IO_TIMING_FAR_END_VMEAS "HALF SIGNAL SWING" -fall
 set_global_assignment -name ACTIVE_SERIAL_CLOCK FREQ_100MHZ
+set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top
+set_global_assignment -name SYSTEMVERILOG_FILE src_files/regfile_with_be.sv
 set_global_assignment -name VERILOG_FILE ./netdma/src/netdma_pkg.sv
 set_global_assignment -name VERILOG_FILE ./netdma/src/netdma_interfaces.sv
 set_global_assignment -name VERILOG_FILE ./netdma/src/dispatcher/netdma_dispatcher.sv
@@ -472,7 +474,6 @@ set_global_assignment -name VERILOG_FILE ./netdma/src/misc/fifo_showahead.v
 set_global_assignment -name VERILOG_FILE ./netdma/src/misc/posedge_detector.sv
 set_global_assignment -name VERILOG_FILE ./netdma/src/misc/bytes_reorder.sv
 set_global_assignment -name QIP_FILE ./soc_files/soc_ethond/synthesis/soc_ethond.qip
-set_global_assignment -name VERILOG_FILE ./src_files/regfile_with_be.v
 set_global_assignment -name VERILOG_FILE ./src_files/avalon_width_adapter.sv
 set_global_assignment -name VERILOG_FILE ./src_files/avalon_mm_to_csr_if.sv
 set_global_assignment -name VERILOG_FILE ./src_files/m88e1512_adapter.sv
@@ -555,4 +556,3 @@ set_global_assignment -name VERILOG_FILE ./mx_csr/mx_phy_csr_to_if.sv
 set_global_assignment -name VERILOG_FILE ./mx_csr/mx_anlz_csr_to_if.sv
 set_global_assignment -name VERILOG_FILE ./mx_csr/nic_ctrl_csr_to_if.sv
 set_global_assignment -name SDC_FILE ./rgmii.sdc
-set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top

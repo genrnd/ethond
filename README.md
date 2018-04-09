@@ -1,6 +1,6 @@
-# Metrotek EthOnd board
+# EthOnd board
 
-Metrotek EthOnd is Altera SoC based development board with 2 GigE ports.
+EthOnd is Altera SoC based development board with 2 GigE ports.
 
 This board was developed for internal needs of the STC Metrotek company and is a working prototype for the next intelligent ethernet testing device.
 
